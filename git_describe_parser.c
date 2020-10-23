@@ -58,7 +58,7 @@ int main(void)
 git_description_t git_describe_parse(void)
 {
     // Process variables
-    char *str_after_rc = NULL, *str_aux = NULL, str_find_num[3] = "-0";
+    char *str_aux = NULL, str_find_num[3] = "-0";
     bool already_found_number[TAG_MAX_VERSION_NUMBERS];
 
     // Dummy initialization of struct variables
@@ -92,27 +92,28 @@ git_description_t git_describe_parse(void)
     }
 
     // Try to find variations of "-rc" for release candidate
-    if (str_after_rc == NULL) {
-        str_after_rc = strstr(result.raw_description, "-rc");
+    str_aux = NULL;
+    if (str_aux == NULL) {
+        str_aux = strstr(result.raw_description, "-rc");
     }
-    if (str_after_rc == NULL) {
-        str_after_rc = strstr(result.raw_description, "-rC");
+    if (str_aux == NULL) {
+        str_aux = strstr(result.raw_description, "-rC");
     }
-    if (str_after_rc == NULL) {
-        str_after_rc = strstr(result.raw_description, "-Rc");
+    if (str_aux == NULL) {
+        str_aux = strstr(result.raw_description, "-Rc");
     }
-    if (str_after_rc == NULL) {
-        str_after_rc = strstr(result.raw_description, "-RC");
+    if (str_aux == NULL) {
+        str_aux = strstr(result.raw_description, "-RC");
     }
 
     // If has found any variation of "-rc"
-    if (str_after_rc != NULL) {
-        str_after_rc += strlen("-rc");
+    if (str_aux != NULL) {
+        str_aux += strlen("-rc");
         result.release_candidate_number = 0;
-        while (is_number(*str_after_rc)) {
+        while (is_number(*str_aux)) {
             result.release_candidate_number *= 10; 
-            result.release_candidate_number += (*str_after_rc) - '0';
-            str_after_rc++;
+            result.release_candidate_number += (*str_aux) - '0';
+            str_aux++;
         }
     }
 
