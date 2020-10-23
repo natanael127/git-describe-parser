@@ -2,6 +2,8 @@
 #ifdef _TEST_MODULE
     #include <stdio.h>
 #endif /* _TEST_MODULE */
+#include <string.h>
+#include <stddef.h>
 #include "git_describe_parser.h"
 
 /* Private definitions ------------------------------------------------------ */
@@ -9,14 +11,21 @@
 // Define _TEST_MODULE for building the executable 
 // in order to test module in a standalone mode
 #define INVALID_INTEGER_RESULT      -1
+#define DIRTY_MARKER                "-dirty"
 
 /* Private types ------------------------------------------------------------ */
 
 /* Private variables -------------------------------------------------------- */
 
 /* Private functions - prototypes ------------------------------------------- */
+static bool is_number(char this_char);
 
 /* Private functions - implementation --------------------------------------- */
+static bool is_number(char this_char)
+{
+    return (this_char >= '0' && this_char <= '9');
+}
+
 #ifdef _TEST_MODULE
 int main(void)
 {
@@ -48,18 +57,83 @@ int main(void)
 /* Public functions --------------------------------------------------------- */
 git_description_t git_describe_parse(void)
 {
+    // Process variables
+    char *str_after_rc = NULL, *str_aux = NULL, str_find_num[3] = "-0";
+    bool already_found_number[TAG_MAX_VERSION_NUMBERS];
+
     // Dummy initialization of struct variables
     git_description_t result = {
         .commit_hash_short          = _GIT_COMMIT_HASH_STR,
         .raw_description            = _GIT_DESCRIPTION_STR,
-        .commits_after_tag          = INVALID_INTEGER_RESULT,
-        .used_version_numbers       = INVALID_INTEGER_RESULT,
+        .commits_after_tag          = 0,
+        .used_version_numbers       = 0,
         .release_candidate_number   = INVALID_INTEGER_RESULT,
         .is_dirty                   = true,
     };
     for (int counter = 0; counter < TAG_MAX_VERSION_NUMBERS; counter++) {
-        result.version_numbers[counter] = INVALID_INTEGER_RESULT;
+        result.version_numbers[counter] = 0;
+        already_found_number[counter] = false;
     }
+
+    // Identifies version numbers
+    str_aux = result.raw_description;
+    while (*str_aux != '\0' && *str_aux != '-' && result.used_version_numbers <= TAG_MAX_VERSION_NUMBERS) {
+        if (is_number(*str_aux)) {
+            already_found_number[result.used_version_numbers] = true;
+            result.version_numbers[result.used_version_numbers] *= 10;
+            result.version_numbers[result.used_version_numbers] += (*str_aux) - '0';
+        } else if (already_found_number[result.used_version_numbers] == true) {
+            result.used_version_numbers++;
+        }
+        str_aux++;
+    }
+    if (already_found_number[result.used_version_numbers] == true) {
+        result.used_version_numbers++;
+    }
+
+    // Try to find variations of "-rc" for release candidate
+    if (str_after_rc == NULL) {
+        str_after_rc = strstr(result.raw_description, "-rc");
+    }
+    if (str_after_rc == NULL) {
+        str_after_rc = strstr(result.raw_description, "-rC");
+    }
+    if (str_after_rc == NULL) {
+        str_after_rc = strstr(result.raw_description, "-Rc");
+    }
+    if (str_after_rc == NULL) {
+        str_after_rc = strstr(result.raw_description, "-RC");
+    }
+
+    // If has found any variation of "-rc"
+    if (str_after_rc != NULL) {
+        str_after_rc += strlen("-rc");
+        result.release_candidate_number = 0;
+        while (is_number(*str_after_rc)) {
+            result.release_candidate_number *= 10; 
+            result.release_candidate_number += (*str_after_rc) - '0';
+            str_after_rc++;
+        }
+    }
+
+    // Looks for number of commits after tag (sequence '-<number>')
+    int counter = 0;
+    while (result.commits_after_tag == 0 && counter <= 9) {
+        str_find_num[1] = counter + '0';
+        str_aux = strstr(result.raw_description, str_find_num);
+        if (str_aux != NULL) {
+            str_aux += strlen("-");
+            while (is_number(*str_aux)) {
+                result.commits_after_tag *= 10;
+                result.commits_after_tag += (*str_aux) - '0';
+                str_aux++;
+            }
+        }
+        counter++;
+    }
+
+    // Checks for marker '-dirty'
+    result.is_dirty = strstr(result.raw_description, DIRTY_MARKER) != NULL;
 
     return result;
 }
