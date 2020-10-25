@@ -3,7 +3,9 @@ This project intends to interpret the current commit of the project and let it a
 
 ## Supported tag format
 A concatenated string containing the following fields in order:
+
 (Name)(Version Numbers)(Release Candidate)
+
 **Examples:**
 - V1.3.5
 - VERSION_2.4-RC6
@@ -11,6 +13,7 @@ A concatenated string containing the following fields in order:
 ### Name (optional)
 A non-numeric sequence.
 '-' is a forbidden character to this field.
+
 **Examples:**
 - V
 - VERSION
@@ -19,6 +22,7 @@ A non-numeric sequence.
 ### Version Numbers (mandatory)
 A sequence of positive decimal numbers separated by any non-numeric separator (except '-').
 The maximum quantity of numbers in this sequence is given by the definition `TAG_MAX_VERSION_NUMBERS` (default = 4).
+
 **Examples:**
 - 1.0.5
 - 10,6/7x8
@@ -26,6 +30,7 @@ The maximum quantity of numbers in this sequence is given by the definition `TAG
 ### Release Candidate (optional)
 The tag may be a release or even a release candidate. To specify a release candidate, this field must be present.
 It must be started by sequence '-rc', which is case insensitive (ie. '-rc' will be the same as '-RC' or '-rC' or '-Rc'), followed by a positive decimal number.
+
 **Examples:**
 - \-rc15
 - \-Rc2
