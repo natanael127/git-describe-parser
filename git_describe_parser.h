@@ -4,7 +4,9 @@
 #include <stdbool.h>
 
 /* Public definitions ------------------------------------------------------- */
-#define TAG_MAX_VERSION_NUMBERS          0x04
+#ifndef TAG_MAX_VERSION_NUMBERS
+    #define TAG_MAX_VERSION_NUMBERS          0x04
+#endif
 
 /* Public types ------------------------------------------------------------- */
 typedef struct
