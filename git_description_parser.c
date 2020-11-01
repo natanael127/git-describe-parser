@@ -4,7 +4,7 @@
 #endif /* _TEST_MODULE */
 #include <string.h>
 #include <stddef.h>
-#include "git_describe_parser.h"
+#include "git_description_parser.h"
 
 /* Private definitions ------------------------------------------------------ */
 // Define _GIT_DESCRIPTION_STR and _GIT_COMMIT_HASH_STR in building time
